@@ -1,6 +1,7 @@
 // Copyright 2021, Aline Normoyle, alinen
 
 #include "image.h"
+#include "string.h"
 
 #include <cassert>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -20,14 +21,15 @@ Image::Image(int width, int height)  {
    myw = width;
    myh = height;
    numchannels = 3;
-   mydata = new Pixel[width * height];  
+   mydata = NULL;  
 }
 
 Image::Image(const Image& orig) {
    myw = orig.myw;
    myh = orig.myh;
    numchannels = orig.numchannels;
-   mydata = orig.mydata;
+   mydata = new Pixel[myw * myh];
+   memcpy(mydata, orig.mydata, sizeof(Pixel)* myw * myh);
   
 }
 
@@ -35,16 +37,21 @@ Image& Image::operator=(const Image& orig) {
   if (&orig == this) {
     return *this;
   }
+  if(mydata != NULL){
+     delete[] mydata;
+  }
    int nw = orig.myw;
    int nh = orig.myh;
-   Pixel* ndata = orig.mydata;
+   Pixel* ndata = new Pixel[myw * myh];
+   memcpy(ndata, orig.mydata, sizeof(Pixel)* myw * myh);
    myw = nw;
    myh = nh;
    mydata = ndata;
-  return *this;
+   return *this;
 }
 
 Image::~Image() {
+   delete[] mydata;
 }
 
 int Image::width() const { 
@@ -62,16 +69,28 @@ char* Image::data() const {
 void Image::set(int width, int height, unsigned char* data) {
    myw = width;
    myh = height;
-   mydata = (Pixel*) data;
+   if(mydata != NULL){
+     delete[] mydata;
+  }
+  mydata = new Pixel[myw * myh];
+  memcpy(mydata, (Pixel*) data, sizeof(Pixel)* myw * myh);
 }
 
 bool Image::load(const std::string& filename, bool flip) {
-  mydata = (Pixel*) stbi_load(filename.c_str(),&myw, &myh, &numchannels, 3);
-  if(mydata == NULL){
-      return false; 
+  if(mydata != NULL){
+   delete[] mydata;
+   mydata = NULL;
+  }
+  Pixel* temp = (Pixel*) stbi_load(filename.c_str(),&myw, &myh, &numchannels, 3);
+
+  if(temp != NULL){
+     mydata = new Pixel[myw * myh];
+     memcpy(mydata, temp, sizeof(Pixel)* myw * myh);
+     stbi_image_free(temp);
+     return true;
   }
   else{
-     return true;
+     return false;
   }
   
 }
@@ -142,7 +161,19 @@ Image Image::flipHorizontal() const {
 }
 
 Image Image::flipVertical() const {
-   Image result(0, 0);
+   Image result(myw, myh);
+   int neww = 0;
+   int oldw = myw;
+   int curRow = 0;
+   while(neww < myw){
+      while(curRow < myh){
+         result.set(neww,curRow,get(oldw,curRow));
+         curRow++;
+      }
+      neww++;
+      oldw--;
+      curRow = 0;
+   }
    return result;
 }
 
