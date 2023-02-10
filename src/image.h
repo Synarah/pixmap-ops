@@ -118,6 +118,12 @@ class Image {
   // rotate the Image 90 degrees
   Image rotate90() const;
 
+  Image blur() const;
+
+  Image extract() const;
+
+  Image boarder() const;
+
   // Return a sub-Image having the given top,left coordinate and (width, height)
   Image subimage(int x, int y, int w, int h) const;
 

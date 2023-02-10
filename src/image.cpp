@@ -15,19 +15,23 @@ namespace agl {
 Image::Image() {
    myw = 0;
    myh = 0;
+   numchannels = 3;
+   mydata = NULL;
 }
 
 Image::Image(int width, int height)  {
    myw = width;
    myh = height;
    numchannels = 3;
-   mydata = NULL;  
+
+   mydata = new Pixel[width * height];  
 }
 
 Image::Image(const Image& orig) {
    myw = orig.myw;
    myh = orig.myh;
    numchannels = orig.numchannels;
+   
    mydata = new Pixel[myw * myh];
    memcpy(mydata, orig.mydata, sizeof(Pixel)* myw * myh);
   
@@ -39,15 +43,16 @@ Image& Image::operator=(const Image& orig) {
   }
   if(mydata != NULL){
      delete[] mydata;
+     mydata = NULL;
   }
-   int nw = orig.myw;
-   int nh = orig.myh;
-   Pixel* ndata = new Pixel[myw * myh];
-   memcpy(ndata, orig.mydata, sizeof(Pixel)* myw * myh);
-   myw = nw;
-   myh = nh;
-   mydata = ndata;
-   return *this;
+  myw = orig.myw;
+  myh = orig.myh;
+  mydata = new Pixel[myw * myh];
+  memcpy(mydata, orig.mydata, sizeof(Pixel)* myw * myh);
+  //myw = nw;
+  //myh = nh;
+  //mydata = ndata;
+  return *this;
 }
 
 Image::~Image() {
@@ -71,16 +76,18 @@ void Image::set(int width, int height, unsigned char* data) {
    myh = height;
    if(mydata != NULL){
      delete[] mydata;
+     mydata = NULL;
   }
   mydata = new Pixel[myw * myh];
   memcpy(mydata, (Pixel*) data, sizeof(Pixel)* myw * myh);
 }
 
 bool Image::load(const std::string& filename, bool flip) {
-  if(mydata != NULL){
-   delete[] mydata;
-   mydata = NULL;
-  }
+   if (mydata != NULL) {
+      delete[] mydata;
+      mydata = NULL;
+   }
+
   Pixel* temp = (Pixel*) stbi_load(filename.c_str(),&myw, &myh, &numchannels, 3);
 
   if(temp != NULL){
@@ -160,28 +167,79 @@ Image Image::flipHorizontal() const {
 
 }
 
+
+
 Image Image::flipVertical() const {
    Image result(myw, myh);
-   int neww = 0;
-   int oldw = myw;
-   int curRow = 0;
-   while(neww < myw){
-      while(curRow < myh){
-         result.set(neww,curRow,get(oldw,curRow));
-         curRow++;
+   for(int i = 0; i < myh; i++){
+      for(int j = 0; j < myw; j++){
+         result.set(i, myw- 1 - j, get(i,j));  
       }
-      neww++;
-      oldw--;
-      curRow = 0;
    }
    return result;
 }
 
 Image Image::rotate90() const {
-   Image result(0, 0);
-  
+   Image result(myh, myw);
+   for(int i = 0; i < myh; i++){
+      for(int j = 0; j < myw; j++){
+         result.set(myw - 1 - j, i, get(i,j));
+      }
+   }
    return result;
 }
+
+Image Image::blur() const{
+   Image result(myw, myh);
+   for(int i = 1; i < myw -1; i++){
+      for(int j = 1; j < myh -1; j++){
+         Pixel cen; 
+         int ar = 0;
+         int ag = 0;
+         int ab = 0;
+         for(int k = i-1; k <= i+1; k++){
+            for(int l = j-1; l <= j+1; l++){
+               Pixel sec = get(k,l);
+               ar = ar + sec.r;
+               ag = ag + sec.g;
+               ab = ab + sec.b;
+            }
+         }
+         cen.r = ar/9;
+         cen.g = ag/9;
+         cen.b = ab/9;
+         result.set(i,j,cen);
+      }
+   }
+   return result;
+}
+
+Image Image::extract() const{
+   Image result(myw, myh);
+   for(int i = 0; i < myw; i++){
+      for(int j = 0; j < myh; j++){
+         Pixel temp = get(i,j);
+         temp.r = 0;
+         temp.g = 0;
+         result.set(i,j,temp);
+      }
+   }
+   return result;
+}
+
+Image Image::boarder() const{
+   Image result(myw + 200, myh + 200);
+   for(int i = 0; i < myw + 200; i++){
+      for(int j = 0; j < myh + 200; j++){
+         Pixel temp = {255,255,255};
+         result.set(i,j,temp);
+      } 
+   }
+   result.replace(*this, 100,100);
+
+   return result;
+}
+
 
 Image Image::subimage(int startx, int starty, int w, int h) const {
    Image sub(w, h);
@@ -202,7 +260,18 @@ void Image::replace(const Image& image, int startx, int starty) {
 }
 
 Image Image::swirl() const {
-   Image result(0, 0);
+   Image result(myw, myh);
+   for(int i = 0; i < myw; i++){
+      for(int j = 0; j < myh; j++){
+         Pixel temp = get(i,j);
+         Pixel sw;
+         sw.r = temp.g;
+         sw.g = temp.b;
+         sw.b = temp.r;
+         result.set(i,j,sw);
+      }
+   }
+   
    return result;
 }
 
@@ -277,8 +346,16 @@ Image Image::alphaBlend(const Image& other, float alpha) const {
 }
 
 Image Image::invert() const {
-   Image image(0, 0);
-   
+   Image image(myw, myh);
+   for(int i = 0; i < myh; i++){
+      for(int j = 0; j < myh; j++){
+         Pixel inv = get(i,j);
+         inv.r = 255 - inv.r;
+         inv.g = 255 - inv.g;
+         inv.b = 255 - inv.b;
+         image.set(i, j, inv);
+      }
+   }
    return image;
 }
 
@@ -296,8 +373,16 @@ Image Image::grayscale() const {
 }
 
 Image Image::colorJitter(int size) const {
-   Image image(0, 0);
-  
+   Image image(myw, myw);
+   for(int i = 0; i < myw; i++){
+      for(int j = 0; j < myh; j++){
+         Pixel temp = get(i,j);
+         temp.r = (temp.r - size) + (rand() % size *2);
+         temp.g = (temp.g - size) + (rand() % size *2);
+         temp.b = (temp.b - size) + (rand() % size *2);
+         image.set(i,j,temp);
+      }
+   }
    return image;
 }
 
