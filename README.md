@@ -3,7 +3,8 @@
 Image manipulation demos based on the PPM image format.
 
 TODO: Add a representative image for your project here
-/Users/synarahsitaf/Desktop/CS/CS313/pixmap-ops/build/earth-art.png
+![earth-art](https://user-images.githubusercontent.com/112510953/218228412-fb075c8b-dc8a-4bb5-833a-d7018f5e72cf.png)
+
 ## How to build
 
 *Windows*
