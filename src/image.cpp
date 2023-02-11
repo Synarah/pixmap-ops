@@ -1,5 +1,14 @@
 // Copyright 2021, Aline Normoyle, alinen
 
+/**
+ *Creating functions that alter an image given a certian image. From a header file a constructor, 
+ copy constructor, operator and destructor are created in order to get instances of images in
+ order to alter them. After reading and altering images they are then rewritten into a new file 
+ so that the altered image is saved. 
+ * @author ssitaf
+ * Feb 9, 2023
+ */
+
 #include "image.h"
 #include "string.h"
 
@@ -191,8 +200,8 @@ Image Image::rotate90() const {
 
 Image Image::blur() const{
    Image result(myw, myh);
-   for(int i = 1; i < myw -1; i++){
-      for(int j = 1; j < myh -1; j++){
+   for(int i = 0; i < myw; i++){
+      for(int j = 0; j < myh; j++){
          Pixel cen; 
          int ar = 0;
          int ag = 0;
@@ -228,14 +237,14 @@ Image Image::extract() const{
 }
 
 Image Image::boarder() const{
-   Image result(myw + 200, myh + 200);
-   for(int i = 0; i < myw + 200; i++){
-      for(int j = 0; j < myh + 200; j++){
+   Image result(myw + 20, myh + 20);
+   for(int i = 0; i < myw + 20; i++){
+      for(int j = 0; j < myh + 20; j++){
          Pixel temp = {255,255,255};
          result.set(i,j,temp);
       } 
    }
-   result.replace(*this, 100,100);
+   result.replace(*this, 10,10);
 
    return result;
 }

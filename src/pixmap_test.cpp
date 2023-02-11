@@ -63,6 +63,31 @@ int main(int argc, char** argv)
    Image flip = image.flipHorizontal(); 
    flip.save("earth-flip.png"); 
 
+   Image flip2 = image.flipVertical(); 
+   flip2.save("earth-flip2.png"); 
+
+   Image rot = image.rotate90(); 
+   rot.save("earth-rot.png"); 
+
+   Image inv = image.invert(); 
+   inv.save("earth-inv.png"); 
+
+   Image blu = image.blur(); 
+   blu.save("earth-blu.png"); 
+
+   Image sw = image.swirl(); 
+   sw.save("earth-sw.png"); 
+
+   Image ex = image.extract(); 
+   ex.save("earth-ex.png"); 
+
+   Image bord = image.boarder(); 
+   bord.save("earth-bord.png"); 
+
+   Image jit = image.colorJitter(44); 
+   jit.save("earth-jit.png"); 
+
+   return 0;
    // sub image
    Image sub = image.subimage(200, 200, 100, 100); 
    sub.save("earth-subimage.png"); 
